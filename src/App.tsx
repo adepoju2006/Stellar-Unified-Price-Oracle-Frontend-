@@ -1,9 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Dashboard } from './pages/Dashboard'
 import { NotFound } from './pages/NotFound'
+import { useWebVitals } from './hooks/useWebVitals'
+import { PreferencesProvider } from './preferences/PreferencesContext'
 
 const PriceDetail = lazy(() =>
   import('./pages/PriceDetail').then((m) => ({ default: m.PriceDetail })),
@@ -17,10 +19,13 @@ function PriceDetailLoader() {
   )
 }
 
-export default function App() {
+const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '')
+
+function AppContent() {
+  const location = useLocation()
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
+    <ErrorBoundary key={location.key}>
+      <PreferencesProvider>
         <Layout>
           <Suspense fallback={<PriceDetailLoader />}>
             <Routes>
@@ -30,7 +35,17 @@ export default function App() {
             </Routes>
           </Suspense>
         </Layout>
-      </ErrorBoundary>
+      </PreferencesProvider>
+    </ErrorBoundary>
+  )
+}
+
+export default function App() {
+  useWebVitals()
+
+  return (
+    <BrowserRouter basename={BASENAME}>
+      <AppContent />
     </BrowserRouter>
   )
 }
